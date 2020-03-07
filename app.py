@@ -10,11 +10,10 @@ except ImportError:
     import ConfigParser as configparser
 
 config = configparser.ConfigParser()
-config.read('settings.ini')
+config.read('app_settings.ini')
 
 def sendMessage(token, user, message):
     print(token, user, message)
-
 
 def getMessage():
     try:
@@ -39,18 +38,27 @@ def getMessage():
             print("\n")
         f.close()
         pass
-
     return message
 
 def getUser():
-    with open("userlist.json", "r") as read_file:
-        user = json.load(read_file)
+    try:
+        with open("userlist.json", "r") as read_file:
+            user = json.load(read_file)
 
-    data = {"users":user['users'].remove(user['users'][0])}
+        #data = {"users":user['users'].remove(user['users'][0])}
+        data = {"users":user['users']}
 
-    with open("userlist.json", "w") as write_file:
-        json.dump(data, write_file)
-
+        with open("userlist.json", "w") as write_file:
+            json.dump(data, write_file)
+    except:
+        if(len(user['users']) == 0):
+            print('\n')
+            print('Ошибка в работе подгрузчика пользователей. Файл с пользователями пуст.')
+            print('\n')
+        else:
+            print('\n')
+            print('Не удалось найти идентификатор получателя сообщения в файле. Убедитесь в наличии и правильном формате файла "userlist.json"')
+            print('\n')
     return user['users'][0]['id']
 
 token = config.get("Settings", "token")
