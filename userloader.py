@@ -3,6 +3,7 @@ import random
 from random import randrange
 import glob
 import json
+import time
 import os
 
 try:
@@ -10,9 +11,11 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
+print('loading...')
+
 config = configparser.ConfigParser()
 config.read('app_settings.ini')
-token = config.get("Settings", "token")
+token = config.get("Settings", "token").split(",")[0]
 
 config.read('userloader_settings.ini')
 group = config.get("SettingsLoader", "group_for_unload_users")
@@ -29,9 +32,9 @@ def getGroup(token, group):
     method = "method=groups.getById"
     group_id = "group_id="+group
     fields = "fields=members_count"
-    print(group)
+    #print(group)
     r = requests.post("https://api.vk.com/api.php?oauth=1&"+method+"&"+group_id+"&"+fields+"&v=5.67&access_token="+token)
-    print(r.json())
+    #print(r.json())
     members_count = r.json()['response'][0]['members_count']
     if(int(members_count) < 20000):
         print("Сообщество "+r.json()['response'][0]['members_count']+ " имеет небольшое количество подписчиков, рекомендуется повысить охват целевой аудитории.")
@@ -41,14 +44,14 @@ def getGroup(token, group):
 def getUsers(token, group, members_count, count):
     group = group.replace("-", "")
     offset = "offset="+str(randrange(int(members_count)-int(count)))
-    print(offset)
+    #print(offset)
     method = "method=groups.getMembers"
     group_id = "group_id="+group
     count = "count="+count
 
     fields = "fields=can_write_private_message,sex,bdate,city,last_seen"
     r = requests.post("https://api.vk.com/api.php?oauth=1&"+method+"&"+group_id+"&"+offset+"&"+fields+"&"+count+"&v=5.67&access_token="+token)
-    print(r.json())
+    #print(r.json())
     return r.json()['response']['items']
 
 def checkUsers(members, sex, bdateFrom, bdateTo, city, last_seen):
@@ -59,14 +62,14 @@ def checkUsers(members, sex, bdateFrom, bdateTo, city, last_seen):
             if(sex != "" and sex != str(member['sex'])): continue
             if(city != "" and city != str(member['city']['title'])): continue
 
-            users.append(member['id'])
+            users.append({"id":member['id']})
             #if()
             #try: print(member['bdate'])
             #except: continue
     return users
 
 def writeUsers(users):
-    print(users)
+    #print(users)
     data = {"users":users}
 
     with open("userlist.json", "w") as write_file:

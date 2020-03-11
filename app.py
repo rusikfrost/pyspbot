@@ -2,6 +2,7 @@ import requests
 import random
 import glob
 import json
+import time
 import os
 
 try:
@@ -12,8 +13,20 @@ except ImportError:
 config = configparser.ConfigParser()
 config.read('app_settings.ini')
 
+
+def checkUserFile():
+    with open("userlist.json", "r") as read_file:
+        user = json.load(read_file)
+    if len(user['users']) <= 10:
+        os.system("python3 userloader.py 1")
+        time.sleep(3)
+
 def sendMessage(token, user, message):
-    print(token, user, message)
+    pass
+    #print(token, user, message)
+    print("--------------------------------------------------")
+    print(message + " to " + user)
+    print("--------------------------------------------------")
 
 def getMessage():
     try:
@@ -44,13 +57,17 @@ def getUser():
     try:
         with open("userlist.json", "r") as read_file:
             user = json.load(read_file)
+        #print(type(user['users']))
 
+        del user['users'][0]
         #data = {"users":user['users'].remove(user['users'][0])}
         data = {"users":user['users']}
-
+        print(data)
         with open("userlist.json", "w") as write_file:
             json.dump(data, write_file)
     except:
+        os.system("python3 userloader.py 1")
+        time.sleep(3)
         if(len(user['users']) == 0):
             print('\n')
             print('Ошибка в работе подгрузчика пользователей. Файл с пользователями пуст.')
@@ -59,10 +76,25 @@ def getUser():
             print('\n')
             print('Не удалось найти идентификатор получателя сообщения в файле. Убедитесь в наличии и правильном формате файла "userlist.json"')
             print('\n')
-    return user['users'][0]['id']
+    return str(user['users'][0]['id'])
 
-token = config.get("Settings", "token")
-user = getUser()
-message = getMessage()
+def program():
+    try:
+        tokens = config.get("Settings", "token").split(',')
+        checkUserFile()
+        for token in tokens:
+            #print("|"+token+"|")
+            user = str(getUser())
+            message = str(getMessage())
 
-sendMessage(token, user, message)
+            sendMessage(token.replace(" ", ""), user, message)
+    except:
+        print("Цикл рассылки завершен с ошибкой, просим ознакомиться с деталями.")
+    else:
+        pass
+        print("Цикл рассылки завершен успешно.")
+        print("________/\___________/\_________")
+    finally:
+        time.sleep(3)
+        program()
+program()
